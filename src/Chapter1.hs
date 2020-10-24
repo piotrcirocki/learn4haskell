@@ -490,7 +490,7 @@ Implement a function that returns the last digit of a given number.
   whether it works for you!
 -}
 lastDigit :: Int -> Int
-lastDigit n = (abs n) `mod` 10
+lastDigit n = abs n `mod` 10
 
 
 {- |
@@ -520,7 +520,7 @@ branches because it is an expression and it must always return some value.
   satisfying the check will be returned and, therefore, evaluated.
 -}
 closestToZero :: Int -> Int -> Int
-closestToZero x y = 
+closestToZero x y =
   if abs x > abs y then y
   else x
 
@@ -555,12 +555,12 @@ value after "=" where the condition is true.
 
 Casual reminder about adding top-level type signatures for all functions :)
 -}
-mid :: Integer -> Integer -> Integer -> Integer 
+mid :: Integer -> Integer -> Integer -> Integer
 mid x y z =
-  let maximum = max x (max y z)
-      minimum = min x (min y z)
-      medium = x + y + z - minimum - maximum
-  in medium 
+  let maximum' = max x (max y z)
+      minimum' = min x (min y z)
+      medium' = x + y + z - minimum' - maximum'
+  in medium' 
 
 {- |
 =⚔️= Task 8
@@ -574,12 +574,15 @@ True
 >>> isVowel 'x'
 False
 -}
+
 isVowel :: Char -> Bool
-isVowel c 
-  | c `elem` ['a', 'e', 'i', 'o', 'u', 'y'] = True
-  | otherwise = False
+isVowel c = isMember c ['a', 'e', 'i', 'o', 'u', 'y']
 
-
+isMember :: Char -> [Char] -> Bool
+isMember _ [] = False
+isMember nn' (x:xs)
+  | nn' == x = True
+  | otherwise = isMember nn' xs
 
 {- |
 == Local variables and functions
@@ -641,16 +644,13 @@ Implement a function that returns the sum of the last two digits of a number.
 Try to introduce variables in this task (either with let-in or where) to avoid
 specifying complex expressions.
 -}
-sumLast2 :: Int -> Int 
-sumLast2 n = last n + penultimate n
-  where 
-    last :: Int -> Int
-    last n = (abs n) `mod` 10 
+sumLast2 :: Int -> Int
+sumLast2 n1' = last' n1' + penultimate n1'
+  where
+    last' :: Int -> Int
+    last' n2' = (abs n2') `mod` 10 
     penultimate :: Int -> Int
-    penultimate n = (abs n) `mod` 100 `div` 10
-
-
-
+    penultimate n3' = (abs n3') `mod` 100 `div` 10
 
 {- |
 =💣= Task 10*
@@ -670,7 +670,7 @@ You need to use recursion in this task. Feel free to return to it later, if you
 aren't ready for this boss yet!
 -}
 firstDigit :: Int -> Int
-firstDigit n 
+firstDigit n
   | n < 0 = firstDigit (abs n)
   | n < 10  = n
   | otherwise = firstDigit (n `div` 10)
