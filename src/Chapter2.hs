@@ -337,9 +337,9 @@ ghci> :l src/Chapter2.hs
 -}
 subList :: Int -> Int -> [a] -> [a]
 subList from to arr
-  | (from > to) = []
+  | from > to = []
   | to > length arr = drop from (take (length arr) arr)
-  | (from >= 0 && to >= 0) = drop from (take (to + 1) arr)
+  | from >= 0 && to >= 0 = drop from (take (to + 1) arr)
   | otherwise = []
 
 
@@ -355,8 +355,7 @@ Implement a function that returns only the first half of a given list.
 -}
 -- PUT THE FUNCTION TYPE IN HERE
 firstHalf :: [a] -> [a]
-firstHalf arr = take ((length arr) `div` 2) arr
-
+firstHalf arr = take (length arr `div` 2) arr
 
 {- |
 =🛡= Pattern matching
@@ -509,7 +508,7 @@ False
 -}
 isThird42 :: [Int] -> Bool
 isThird42 [] = False
-isThird42 (  _ : _ : 42 : _ ) = True 
+isThird42 (  _ : _ : 42 : _ ) = True
 isThird42 _ = False
 
 {- |
@@ -615,7 +614,7 @@ Implement a function that duplicates each element of the list
 -}
 duplicate :: [a] -> [a]
 duplicate [] = []
-duplicate (x:xs) = x : x : duplicate xs 
+duplicate (x:xs) = x : x : duplicate xs
 
 
 {- |
@@ -637,11 +636,11 @@ takeEven [x] = [x]
 takeEven arr = helperTakeEven arr []
 
 helperTakeEven :: [Int] -> [Int] -> [Int]
-helperTakeEven arr newArr = go ((length arr) - 1) newArr
-  where 
+helperTakeEven arr = go (length arr - 1)
+  where
     go :: Int -> [Int] -> [Int]
     go acc nArr | acc < 0 = nArr
-                  | otherwise = case acc `mod` 2 of 
+                | otherwise = case acc `mod` 2 of
                                   0 -> go (acc - 1) ((arr !! acc) : nArr)
                                   _  -> go (acc - 1) nArr
 {- |
@@ -749,7 +748,7 @@ value of the element itself
 🕯 HINT: Use combination of 'map' and 'replicate'
 -}
 smartReplicate :: [Int] -> [Int]
-smartReplicate l = concat (map (\x -> replicate x x) l)
+smartReplicate = concatMap (\x -> replicate x x)
 
 {- |
 =⚔️= Task 9
@@ -764,7 +763,7 @@ the list with only those lists that contain a passed element.
 -}
 
 contains :: Int -> [[Int]] -> [[Int]]
-contains n l = filter (\x -> n `elem` x ) l
+contains n = filter (\x -> n `elem` x )
 
 {- |
 =🛡= Eta-reduction
@@ -890,7 +889,7 @@ rewind arr =  rewindHelper arr []
 
 rewindHelper :: [Int] -> [Int] -> [Int]
 rewindHelper [] newArr = newArr
-rewindHelper (x:xs) newArr = rewindHelper (xs) (x:newArr)
+rewindHelper (x:xs) newArr = rewindHelper xs (x:newArr)
 
 {-
 You did it! Now it is time to open pull request with your changes
