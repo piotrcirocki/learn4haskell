@@ -1326,7 +1326,7 @@ class DragonTurn attack where
 instance DragonTurn DragonAttack where
   makeDragonAction :: DragonAttack -> KnightFighter -> KnightFighter
   makeDragonAction (MkDragonAttack attack) (MkKnightFighter (MkHealthStrength healthStrength) (MkAttackStrength attackStrength) (MkDefenseStrength defenseStrength)) =
-    let knightNewHealth = healthStrength - (attack `div` defenseStrength)
+    let knightNewHealth = healthStrength - attack --(attack `div` defenseStrength)
         newKnight = MkKnightFighter{
                       kHealth = MkHealthStrength knightNewHealth,
                       kAttack = MkAttackStrength attackStrength,
@@ -1449,9 +1449,9 @@ makeDragonAndKnightFight =
       exampleKnight = MkKnightFighter {
                         kHealth = MkHealthStrength 120,
                         kAttack = MkAttackStrength 10,
-                        kDefense = MkDefenseStrength 80
+                        kDefense = MkDefenseStrength 2
                       }
-      dragonActions = [Da (MkDragonAttack 6), Dr (MkDragonRun 3), Da (MkDragonAttack 2), Dr (MkDragonRun 13), Da (MkDragonAttack 30), Da (MkDragonAttack 60)]
+      dragonActions = [Da (MkDragonAttack 6), Dr (MkDragonRun 3), Da (MkDragonAttack 2), Dr (MkDragonRun 13), Da (MkDragonAttack 30), Da (MkDragonAttack 6)]
       knightActions = [Ka (MkKnightAttack 30), Kd (MkKnightDrink 12), Ks (MkKnightSpell 8), Kd (MkKnightDrink 10), Ka (MkKnightAttack 40)]
       resultOfFight = fightLoop exampleDragon exampleKnight KnightTime dragonActions knightActions []
   in resultOfFight
