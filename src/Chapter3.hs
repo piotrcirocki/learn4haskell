@@ -612,7 +612,7 @@ buildWalls (LivingCity cCastleInCity cWalls cChurchOrLib cHouses) =
           }
    in case cCastleInCity of
         Nothing -> defaultCity
-        Just _ -> case (numberOfAllPeople >= 10) of
+        Just _ -> case numberOfAllPeople >= 10 of
           True -> newlyBuiltCity
           _ -> defaultCity
 
@@ -945,7 +945,7 @@ data MaybeT treasure =
   NoTreasure
   | JustTreasure treasure deriving (Show)
 
-data Dragon magicP = Dragon{
+newtype Dragon magicP = Dragon{
               magicPower ::  magicP
               } deriving (Show)
 
@@ -1222,6 +1222,43 @@ implement the following functions:
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
 
+data Day = Monday | Tuesday | Wednesday | Thursday | Friday | Saturday | Sunday deriving (Eq, Ord, Show, Read, Bounded, Enum)
+
+isWeekend :: Day -> Bool
+isWeekend day =
+  case day of
+    Saturday -> True
+    Sunday -> True
+    _ -> False
+
+isWeekendEx :: Bool
+isWeekendEx =
+  let saturday = read "Saturday" :: Day
+  in isWeekend saturday
+
+nextDay :: Day -> Day
+nextDay = succ
+
+nextDayEx :: Day
+nextDayEx =
+  let monday = Monday
+  in nextDay monday
+
+daysToParty :: Day -> Int
+daysToParty cDay =
+  let numOfDays = 7 
+  in if cDay < Friday then
+    fromEnum Friday - fromEnum cDay
+  else numOfDays - fromEnum cDay + fromEnum Friday
+
+daysToPartyEx1 :: Int
+daysToPartyEx1 =
+  daysToParty Thursday
+
+daysToPartyEx2 :: Int
+daysToPartyEx2 =
+  daysToParty Friday
+
 {-
 =💣= Task 9*
 
@@ -1256,6 +1293,171 @@ properties using typeclasses, but they are different data types in the end.
 Implement data types and typeclasses, describing such a battle between two
 contestants, and write a function that decides the outcome of a fight!
 -}
+
+
+
+newtype AttackStrength = MkAttackStrength Int deriving (Show)
+newtype HealthStrength = MkHealthStrength Int deriving (Show)
+newtype DefenseStrength = MkDefenseStrength Int deriving (Show)
+
+newtype DragonAttack = MkDragonAttack Int deriving (Show)
+newtype DragonRun = MkDragonRun Int deriving (Show)
+
+newtype KnightAttack = MkKnightAttack Int deriving (Show)
+newtype KnightDrink = MkKnightDrink Int deriving (Show)
+newtype KnightSpell = MkKnightSpell Int deriving (Show)
+
+data DragonAction  =  Da DragonAttack | Dr DragonRun
+data KnightAction = Ka KnightAttack | Kd KnightDrink | Ks KnightSpell
+
+data KnightFighter = MkKnightFighter {
+                  kHealth :: HealthStrength,
+                  kAttack :: AttackStrength,
+                  kDefense :: DefenseStrength
+                                  }
+data DragonFighter = MkDragonFighter {
+                  dHealth :: HealthStrength,
+                  dAttack :: AttackStrength
+                                 }
+class DragonTurn attack where
+  makeDragonAction :: attack -> KnightFighter -> KnightFighter
+
+
+instance DragonTurn DragonAttack where
+  makeDragonAction :: DragonAttack -> KnightFighter -> KnightFighter
+  makeDragonAction (MkDragonAttack attack) (MkKnightFighter (MkHealthStrength healthStrength) (MkAttackStrength attackStrength) (MkDefenseStrength defenseStrength)) =
+    let knightNewHealth = healthStrength - (attack `div` defenseStrength)
+        newKnight = MkKnightFighter{
+                      kHealth = MkHealthStrength knightNewHealth,
+                      kAttack = MkAttackStrength attackStrength,
+                      kDefense = MkDefenseStrength defenseStrength
+                    }
+    in newKnight
+
+instance DragonTurn DragonRun where
+  makeDragonAction :: DragonRun -> KnightFighter -> KnightFighter
+  makeDragonAction (MkDragonRun run) (MkKnightFighter (MkHealthStrength healthStrength) (MkAttackStrength attackStrength) (MkDefenseStrength defenseStrength)) =
+    let newKnightHealth = healthStrength + run
+        newKnight = MkKnightFighter{
+                      kHealth = MkHealthStrength newKnightHealth,
+                      kAttack = MkAttackStrength attackStrength,
+                      kDefense = MkDefenseStrength defenseStrength
+                    }
+    in newKnight
+
+class KnightTurn attack where 
+  makeKnightAction :: attack -> DragonFighter -> DragonFighter
+
+instance KnightTurn KnightAttack where
+  makeKnightAction :: KnightAttack -> DragonFighter -> DragonFighter
+  makeKnightAction (MkKnightAttack kAttackStrength) (MkDragonFighter (MkHealthStrength healthStrength)(MkAttackStrength attackStrength)) = 
+    let dragonNewHealth = healthStrength - kAttackStrength
+        newDragon = MkDragonFighter{
+                      dHealth = MkHealthStrength dragonNewHealth,
+                      dAttack = MkAttackStrength attackStrength
+                      }
+    in newDragon
+
+instance KnightTurn KnightDrink where
+  makeKnightAction :: KnightDrink -> DragonFighter -> DragonFighter
+  makeKnightAction (MkKnightDrink kDrink) (MkDragonFighter (MkHealthStrength healthStrength)(MkAttackStrength attackStrength)) =
+    let newDragonAttack = attackStrength - attackStrength `div` kDrink
+        newDragon = MkDragonFighter{
+                      dHealth = MkHealthStrength healthStrength,
+                      dAttack = MkAttackStrength newDragonAttack
+                      }
+    in newDragon
+
+instance KnightTurn KnightSpell where
+  makeKnightAction :: KnightSpell -> DragonFighter -> DragonFighter
+  makeKnightAction (MkKnightSpell kSpell) (MkDragonFighter (MkHealthStrength healthStrength)(MkAttackStrength attackStrength)) =
+    let newDragonHealth = healthStrength - healthStrength `div` kSpell
+        newDragonAttack = attackStrength - attackStrength `div` kSpell
+        newDragon = MkDragonFighter{
+                      dHealth = MkHealthStrength newDragonHealth,
+                      dAttack = MkAttackStrength newDragonAttack
+                      }
+    in newDragon
+
+data Turn = KnightTime | DragonTime
+
+fightLoop :: DragonFighter -> KnightFighter -> Turn -> [DragonAction] -> [KnightAction] -> [String] -> [String]
+fightLoop dragon' knight' turn (dAct:dActs) (kAct:kActs) hits =
+  let newDragon =  fightKnightAgainstDragon kAct dragon'
+      newKnight = fightDragonAgainstKnight dAct knight'
+  in case turn of
+          KnightTime -> fightLoop newDragon knight' DragonTime (dAct:dActs) kActs (("Knight action: " ++ descAction (Kact kAct)) : hits)
+          DragonTime -> fightLoop dragon' newKnight KnightTime dActs (kAct:kActs) (("Dragon action: " ++ descAction (Dact dAct)) : hits)
+
+fightLoop dragon' knight' _ (dAct:dActs) [] hits =
+  let newKnight = fightDragonAgainstKnight dAct knight'
+  in fightLoop dragon' newKnight DragonTime dActs [] (("Dragon action: " ++ descAction (Dact dAct)) : hits)
+
+fightLoop dragon' knight' _ [] (kAct:kActs) hits =
+  let newDragon =  fightKnightAgainstDragon kAct dragon'
+  in fightLoop newDragon knight' KnightTime [] kActs (("Knight action: " ++ descAction (Kact kAct)) : hits)
+
+fightLoop (MkDragonFighter (MkHealthStrength dHea) (MkAttackStrength dAtt)) (MkKnightFighter (MkHealthStrength kHea) (MkAttackStrength kAtt) (MkDefenseStrength kDef)) _ [] [] hits =
+  let dHeaStr = " Dragon Health: " ++ show dHea ++ "."
+      dAttStr = " Dragon Attack: " ++ show dAtt ++ "."
+      kHeaStr = " Knight Health: " ++ show kHea ++ "."
+      kAttStr = " Knight Attack: " ++ show kAtt ++ "."
+      kDefStr = " Knight Defense: " ++ show kDef ++ "."
+      winner = if dHea > kHea then "Dragon Wins!" else "Knight Wins!"
+  in reverse (winner : ("Fight Result:" ++ dHeaStr ++ dAttStr ++ kHeaStr ++ kAttStr ++ kDefStr) : hits)
+
+data EitherKnightOrDragonAction kAction dAction
+  = Kact kAction
+   | Dact dAction
+
+descAction :: EitherKnightOrDragonAction KnightAction DragonAction -> String
+descAction (Dact dact) = 
+  case dact of
+    Da (MkDragonAttack datt) -> "Dragon attacked Knight with " ++ show datt ++ " points." 
+    Dr (MkDragonRun dr) -> "Dragon run " ++ show dr ++ " steps."
+
+descAction (Kact kact) = 
+  case kact of
+    Ka (MkKnightAttack katt) -> "Knight attacked Dragon with " ++ show katt ++ " points."
+    Kd (MkKnightDrink kdrink) -> "Knight drank " ++ show kdrink ++ " mls of potion." 
+    Ks (MkKnightSpell kspell) -> "Knight casted a spell of " ++ show kspell ++ " points."
+
+
+
+-- knight fights against dragon
+fightDragonAgainstKnight :: DragonAction -> KnightFighter -> KnightFighter
+fightDragonAgainstKnight dAct knight = 
+  case dAct of
+    Da (MkDragonAttack datt) -> makeDragonAction (MkDragonAttack datt) knight
+    Dr (MkDragonRun dr) -> makeDragonAction (MkDragonRun dr) knight
+
+-- dragon fights against knight
+fightKnightAgainstDragon :: KnightAction -> DragonFighter -> DragonFighter
+fightKnightAgainstDragon kAct dragonF =
+  case kAct of
+    Ka (MkKnightAttack katt) -> makeKnightAction (MkKnightAttack katt) dragonF
+    Kd (MkKnightDrink kdrink) -> makeKnightAction (MkKnightDrink kdrink) dragonF
+    Ks (MkKnightSpell kspell) -> makeKnightAction (MkKnightSpell kspell) dragonF
+
+
+makeDragonAndKnightFight :: [String]
+makeDragonAndKnightFight = 
+  let exampleDragon = MkDragonFighter {
+                        dHealth = MkHealthStrength 100,
+                        dAttack = MkAttackStrength 40
+                      }
+      exampleKnight = MkKnightFighter {
+                        kHealth = MkHealthStrength 120,
+                        kAttack = MkAttackStrength 10,
+                        kDefense = MkDefenseStrength 80
+                      }
+      dragonActions = [Da (MkDragonAttack 6), Dr (MkDragonRun 3), Da (MkDragonAttack 2), Dr (MkDragonRun 13), Da (MkDragonAttack 30), Da (MkDragonAttack 60)]
+      knightActions = [Ka (MkKnightAttack 30), Kd (MkKnightDrink 12), Ks (MkKnightSpell 8), Kd (MkKnightDrink 10), Ka (MkKnightAttack 40)]
+      resultOfFight = fightLoop exampleDragon exampleKnight KnightTime dragonActions knightActions []
+  in resultOfFight
+
+executeDragonFight :: IO()
+executeDragonFight = mapM_ putStrLn makeDragonAndKnightFight
 
 {-
 You did it! Now it is time to open pull request with your changes
