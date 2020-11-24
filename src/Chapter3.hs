@@ -1232,7 +1232,7 @@ fightKnightAgainstDragon kAct dragonF =
 
 
 makeDragonAndKnightFight :: [String]
-makeDragonAndKnightFight = 
+makeDragonAndKnightFight =
   let exampleDragon = MkDragonFighter {
                         dHealth = MkHealthStrength 100,
                         dAttack = MkAttackStrength 40

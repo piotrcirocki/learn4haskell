@@ -114,23 +114,23 @@ As always, try to guess the output first! And don't forget to insert
 the output in here:
 
 >>> :k Char
-
+Char :: *
 >>> :k Bool
-
+Bool :: *
 >>> :k [Int]
-
+[Int] :: *
 >>> :k []
-
+[] :: * -> *
 >>> :k (->)
-
+(->) :: * -> * -> *
 >>> :k Either
-
+Either :: * -> * -> *
 >>> data Trinity a b c = MkTrinity a b c
 >>> :k Trinity
-
+Trinity :: * -> * -> * -> *
 >>> data IntBox f = MkIntBox (f Int)
 >>> :k IntBox
-
+IntBox :: (* -> *) -> *
 -}
 
 {- |
@@ -291,9 +291,21 @@ method. Yes, similar to how we can partially apply functions. See, how
 we can reuse already known concepts (e.g. partial application) from
 values and apply them to the type level?
 -}
+
 instance Functor (Secret e) where
     fmap :: (a -> b) -> Secret e a -> Secret e b
-    fmap = error "fmap for Box: not implemented!"
+    fmap f (Reward a) = Reward (f a)
+    fmap _ (Trap e) = Trap e
+
+rewardExample1 :: Secret Int [Char]
+rewardExample1 = 
+  let secret1 = Reward "Secret inside"
+  in fmap reverse secret1
+
+rewardExample2 :: Secret [Int] [Char]
+rewardExample2 = 
+  let secret2 = Trap [2, 3, 4]
+  in fmap reverse secret2
 
 {- |
 =⚔️= Task 3
@@ -305,7 +317,21 @@ typeclasses for standard data types.
 -}
 data List a
     = Empty
-    | Cons a (List a)
+    | Cons a (List a) deriving (Show)
+instance Functor List where
+  fmap :: (a -> b)  -> List a -> List b
+  fmap f (Cons a b) = Cons (f a) (fmap f b)
+  fmap _ Empty = Empty
+
+functorListExamle1 :: List Int
+functorListExamle1 = 
+  let list1 = Cons 3 (Cons 1 Empty)
+  in fmap (*2) list1
+
+functorListExamle2 :: List Int
+functorListExamle2 = 
+  let list2 = Empty
+  in fmap (*2) list2
 
 {- |
 =🛡= Applicative
