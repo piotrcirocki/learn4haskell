@@ -496,12 +496,40 @@ Applicatives can be found in many applications:
 
 Implement the Applicative instance for our 'Secret' data type from before.
 -}
+-- @
+-- class Functor f where
+--     fmap :: (a -> b) -> f a -> f b
+-- @
+-- @
+-- class Functor f => Applicative f where
+--     pure :: a -> f a
+--     (<*>) :: f (a -> b) -> f a -> f b
+-- @
+
+-- instance Applicative Maybe where
+--     pure :: a -> Maybe a
+--     pure = Just
+
+--     (<*>) :: Just (a -> b) -> Just a -> Just b
+--     Nothing <*> _ = Nothing
+--     Just f <*> x = fmap f x
+
+
+-- >>> Just not <*> Just True
+-- Just False
+-- >>> Just (+ 4) <*> Just 7
+-- Just 11
+-- >>> Just (replicate 3) <*> Just 0
+-- Just [0,0,0]
 instance Applicative (Secret e) where
     pure :: a -> Secret e a
-    pure = error "pure Secret: Not implemented!"
+    pure = Reward
 
     (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
-    (<*>) = error "(<*>) Secret: Not implemented!"
+    (<*>) (Reward f) (Reward a) =  fmap f (Reward a)
+    (<*>) (Reward f) (Trap e) =  fmap f (Trap e)
+    (<*>) (Trap _) (Trap e) = Trap e
+    (<*>) (Trap f) (Reward _) = Trap f
 
 {- |
 =⚔️= Task 5
