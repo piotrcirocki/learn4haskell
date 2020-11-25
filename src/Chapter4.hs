@@ -521,6 +521,7 @@ Implement the Applicative instance for our 'Secret' data type from before.
 -- Just 11
 -- >>> Just (replicate 3) <*> Just 0
 -- Just [0,0,0]
+
 instance Applicative (Secret e) where
     pure :: a -> Secret e a
     pure = Reward
@@ -530,6 +531,17 @@ instance Applicative (Secret e) where
     (<*>) (Reward f) (Trap e) =  fmap f (Trap e)
     (<*>) (Trap _) (Trap e) = Trap e
     (<*>) (Trap f) (Reward _) = Trap f
+
+secretApplicativeExample1 :: Secret e [Char]
+secretApplicativeExample1 = 
+  let secretAppl1 = Reward "Secret inside"
+  in   (<*>) (Reward reverse) secretAppl1
+
+secretApplicativeExample2 :: Secret [Char] [Char]
+secretApplicativeExample2 = 
+  let secretAppl2 = Trap "Secret inside"
+  in   (<*>) (Reward reverse) secretAppl2
+
 
 {- |
 =⚔️= Task 5
