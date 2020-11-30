@@ -496,6 +496,26 @@ Applicatives can be found in many applications:
 
 Implement the Applicative instance for our 'Secret' data type from before.
 -}
+instance Applicative (Secret e) where
+    pure :: a -> Secret e a
+    pure = Reward
+
+    (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
+    (<*>) (Reward f) (Reward a) =  fmap f (Reward a)
+    (<*>) (Reward f) (Trap e) =  fmap f (Trap e)
+    (<*>) (Trap _) (Trap e) = Trap e
+    (<*>) (Trap f) (Reward _) = Trap f
+
+secretApplicativeExample1 :: Secret e [Char]
+secretApplicativeExample1 = 
+  let secretAppl1 = Reward "Secret inside"
+  in (<*>) (Reward reverse) secretAppl1
+
+secretApplicativeExample2 :: Secret [Char] [Char]
+secretApplicativeExample2 = 
+  let secretAppl2 = Trap "Secret inside"
+  in (<*>) (Reward reverse) secretAppl2
+
 -- @
 -- class Functor f where
 --     fmap :: (a -> b) -> f a -> f b
@@ -522,27 +542,6 @@ Implement the Applicative instance for our 'Secret' data type from before.
 -- >>> Just (replicate 3) <*> Just 0
 -- Just [0,0,0]
 
-instance Applicative (Secret e) where
-    pure :: a -> Secret e a
-    pure = Reward
-
-    (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
-    (<*>) (Reward f) (Reward a) =  fmap f (Reward a)
-    (<*>) (Reward f) (Trap e) =  fmap f (Trap e)
-    (<*>) (Trap _) (Trap e) = Trap e
-    (<*>) (Trap f) (Reward _) = Trap f
-
-secretApplicativeExample1 :: Secret e [Char]
-secretApplicativeExample1 = 
-  let secretAppl1 = Reward "Secret inside"
-  in   (<*>) (Reward reverse) secretAppl1
-
-secretApplicativeExample2 :: Secret [Char] [Char]
-secretApplicativeExample2 = 
-  let secretAppl2 = Trap "Secret inside"
-  in   (<*>) (Reward reverse) secretAppl2
-
-
 {- |
 =⚔️= Task 5
 
@@ -555,7 +554,21 @@ Implement the 'Applicative' instance for our 'List' type.
   type.
 -}
 
+instance Applicative List where
+  pure :: a -> List a
+  pure _ =  Empty
 
+  (<*>) :: List (a -> b) -> List a -> List b
+  (<*>) (Cons x _) (Cons a b) =  fmap x (Cons a b)
+  (<*>) _ Empty = Empty
+  (<*>) Empty (Cons  _ _ ) = Empty
+
+applicativeListExample1 :: List Int 
+applicativeListExample1 =
+  let list1 = Cons 3 (Cons 1 Empty)
+      listOfFunctions = Cons (*2) Empty
+  in (<*>) listOfFunctions list1
+  
 {- |
 =🛡= Monad
 
