@@ -502,9 +502,8 @@ instance Applicative (Secret e) where
 
     (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
     (<*>) (Reward f) (Reward a) =  fmap f (Reward a)
-    (<*>) (Reward f) (Trap e) =  fmap f (Trap e)
-    (<*>) (Trap _) (Trap e) = Trap e
-    (<*>) (Trap f) (Reward _) = Trap f
+    (<*>) _ (Trap e) = Trap e
+    (<*>) (Trap f) _ = Trap f
 
 secretApplicativeExample1 :: Secret e [Char]
 secretApplicativeExample1 = 
@@ -515,32 +514,6 @@ secretApplicativeExample2 :: Secret [Char] [Char]
 secretApplicativeExample2 = 
   let secretAppl2 = Trap "Secret inside"
   in (<*>) (Reward reverse) secretAppl2
-
--- @
--- class Functor f where
---     fmap :: (a -> b) -> f a -> f b
--- @
--- @
--- class Functor f => Applicative f where
---     pure :: a -> f a
---     (<*>) :: f (a -> b) -> f a -> f b
--- @
-
--- instance Applicative Maybe where
---     pure :: a -> Maybe a
---     pure = Just
-
---     (<*>) :: Just (a -> b) -> Just a -> Just b
---     Nothing <*> _ = Nothing
---     Just f <*> x = fmap f x
-
-
--- >>> Just not <*> Just True
--- Just False
--- >>> Just (+ 4) <*> Just 7
--- Just 11
--- >>> Just (replicate 3) <*> Just 0
--- Just [0,0,0]
 
 {- |
 =⚔️= Task 5
@@ -559,16 +532,41 @@ instance Applicative List where
   pure _ =  Empty
 
   (<*>) :: List (a -> b) -> List a -> List b
-  (<*>) (Cons x _) (Cons a b) =  fmap x (Cons a b)
+  (<*>) (Cons x y) (Cons a b) =  helperLst (Cons x y) (Cons a b) Empty
   (<*>) _ Empty = Empty
-  (<*>) Empty (Cons  _ _ ) = Empty
+  (<*>) Empty _ = Empty
+
+unwrap :: List a -> List a -> List a
+unwrap (Cons a b) accLst =
+  unwrap  b (Cons a accLst)
+
+unwrap Empty accList = revert accList Empty
+
+revert :: List a -> List a -> List a
+revert (Cons a b) accList =
+  revert b (Cons a accList)
+
+revert Empty accList = accList
+
+helperLst :: List (a -> b) -> List a -> List b -> List b
+helperLst (Cons x y) lstValues lst = helperLst y lstValues (unwrap  (fmap x lstValues) lst)
+helperLst Empty _ lst = lst
 
 applicativeListExample1 :: List Int 
 applicativeListExample1 =
-  let list1 = Cons 3 (Cons 1 Empty)
+  let list1 = Cons 7 (Cons 3 (Cons 1 Empty))
       listOfFunctions = Cons (*2) Empty
   in (<*>) listOfFunctions list1
-  
+
+applicativeListExample2 :: List Int 
+applicativeListExample2 =
+  let list1 = Cons 7 (Cons 3 (Cons 1 Empty))
+      --listOfFunctions = Cons (+5) (Cons (+1) (Cons (*2) Empty))
+      listOfFunctions =  Cons (+1) (Cons (*2) Empty)
+  in (<*>) listOfFunctions list1
+ --Cons 2 (Cons 4 (Cons 8 (Cons 14 (Cons 6 (Cons 2 Empty)))))
+ --Cons 2 (Cons 4 (Cons 8 (Cons 12 (Cons 8 (Cons 6 (Cons 14 (Cons 6 (Cons 2 Empty))))))))
+ --should be Cons 8 (Cons 4 (Cons 2 (Cons 14 (Cons 6 (Cons 2 Empty)))))
 {- |
 =🛡= Monad
 
