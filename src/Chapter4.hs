@@ -532,25 +532,36 @@ instance Applicative List where
   pure _ =  Empty
 
   (<*>) :: List (a -> b) -> List a -> List b
-  (<*>) (Cons x y) (Cons a b) =  helperLst (Cons x y) (Cons a b) Empty
+  (<*>) (Cons x y) (Cons a b) = makeApplicativeLst (Cons x y) (Cons a b)
   (<*>) _ Empty = Empty
   (<*>) Empty _ = Empty
 
+makeApplicativeLst :: List (a -> b) -> List a ->  List b
+makeApplicativeLst lstOfFuctions lstToProceed = 
+  let revertedLstOfFunctions = revert lstOfFuctions Empty
+  in helperLst revertedLstOfFunctions lstToProceed Empty
+
+helperLst :: List (a -> b) -> List a -> List b -> List b
+helperLst (Cons x y) lstValues lst = helperLst y lstValues (makeUnwrap (fmap x lstValues) lst)
+helperLst Empty _ lst = lst
+
+makeUnwrap :: List a -> List a -> List a
+makeUnwrap lstToUnwrap accLst = 
+  let revertedLst = revert lstToUnwrap Empty
+  in unwrap revertedLst accLst
+
 unwrap :: List a -> List a -> List a
 unwrap (Cons a b) accLst =
-  unwrap  b (Cons a accLst)
+  unwrap b (Cons a accLst)
 
-unwrap Empty accList = revert accList Empty
+unwrap Empty accList = accList
+
 
 revert :: List a -> List a -> List a
 revert (Cons a b) accList =
   revert b (Cons a accList)
 
 revert Empty accList = accList
-
-helperLst :: List (a -> b) -> List a -> List b -> List b
-helperLst (Cons x y) lstValues lst = helperLst y lstValues (unwrap  (fmap x lstValues) lst)
-helperLst Empty _ lst = lst
 
 applicativeListExample1 :: List Int 
 applicativeListExample1 =
@@ -561,12 +572,9 @@ applicativeListExample1 =
 applicativeListExample2 :: List Int 
 applicativeListExample2 =
   let list1 = Cons 7 (Cons 3 (Cons 1 Empty))
-      --listOfFunctions = Cons (+5) (Cons (+1) (Cons (*2) Empty))
-      listOfFunctions =  Cons (+1) (Cons (*2) Empty)
+      listOfFunctions = Cons (*10) (Cons (+1) (Cons (*2) Empty))
   in (<*>) listOfFunctions list1
- --Cons 2 (Cons 4 (Cons 8 (Cons 14 (Cons 6 (Cons 2 Empty)))))
- --Cons 2 (Cons 4 (Cons 8 (Cons 12 (Cons 8 (Cons 6 (Cons 14 (Cons 6 (Cons 2 Empty))))))))
- --should be Cons 8 (Cons 4 (Cons 2 (Cons 14 (Cons 6 (Cons 2 Empty)))))
+
 {- |
 =🛡= Monad
 
