@@ -685,8 +685,23 @@ Implement the 'Monad' instance for our 'Secret' type.
 -}
 instance Monad (Secret e) where
     (>>=) :: Secret e a -> (a -> Secret e b) -> Secret e b
-    (>>=) = error "bind Secret: Not implemented!"
+    (>>=) (Reward a) f = f a
+    (>>=) (Trap e) _ = Trap e
 
+secretMonadExample1 :: Secret e Int
+secretMonadExample1 = 
+  let secretM1 = Reward '1'
+  in secretM1 >>= fromCharToAsciiInt
+
+secretMonadExample2 :: Secret Char Int
+secretMonadExample2 = 
+  let secretM1 = Trap '1'
+  in secretM1 >>= fromCharToAsciiInt
+
+fromCharToAsciiInt :: Char -> Secret e Int
+fromCharToAsciiInt chr = 
+  let fstLetter = fromEnum chr  
+  in Reward fstLetter
 {- |
 =⚔️= Task 7
 
