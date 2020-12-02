@@ -502,8 +502,9 @@ instance Applicative (Secret e) where
 
     (<*>) :: Secret e (a -> b) -> Secret e a -> Secret e b
     (<*>) (Reward f) (Reward a) =  fmap f (Reward a)
+    (<*>) (Trap e) _ = Trap e
     (<*>) _ (Trap e) = Trap e
-    (<*>) (Trap f) _ = Trap f
+
 
 secretApplicativeExample1 :: Secret e [Char]
 secretApplicativeExample1 = 
@@ -687,7 +688,6 @@ instance Monad (Secret e) where
     (>>=) :: Secret e a -> (a -> Secret e b) -> Secret e b
     (>>=) (Reward a) f = f a
     (>>=) (Trap e) _ = Trap e
-
 secretMonadExample1 :: Secret e Int
 secretMonadExample1 = 
   let secretM1 = Reward '1'
@@ -711,6 +711,25 @@ Implement the 'Monad' instance for our lists.
   maybe a few) to flatten lists of lists to a single list.
 -}
 
+instance Monad List where
+  (>>=) :: List a -> (a -> List b) -> List b
+  (>>=) (Cons a b) f = helperAccResults (Cons a b ) f Empty
+  (>>=) Empty _ = Empty
+
+helperAccResults :: List a -> (a -> List b) -> List b -> List b
+helperAccResults (Cons a b) f lstAcc =
+  let currList = makeUnwrap (f a) lstAcc
+  in helperAccResults b f currList
+
+helperAccResults Empty _ lstAcc = revert lstAcc Empty
+
+fromCharToAsciiList :: Char -> List Int
+fromCharToAsciiList chr = Cons (fromEnum chr) Empty
+
+monadListEx1 :: List Int
+monadListEx1 = 
+  let list1 = Cons '7' (Cons '3' (Cons '1' Empty))
+  in list1 >>= fromCharToAsciiList
 
 {- |
 =💣= Task 8*: Before the Final Boss
@@ -729,7 +748,16 @@ Can you implement a monad version of AND, polymorphic over any monad?
 🕯 HINT: Use "(>>=)", "pure" and anonymous function
 -}
 andM :: (Monad m) => m Bool -> m Bool -> m Bool
-andM = error "andM: Not implemented!"
+andM a b = a >>= \x -> if x then b else return False
+
+andMExample1 :: Maybe Bool
+andMExample1 = andM (Just True) (Just False)
+
+andMExample2 :: Maybe Bool
+andMExample2 = andM (Just False) (Just True)
+
+andMExample3 :: Secret e Bool
+andMExample3 = andM (Reward False) (Reward True)
 
 {- |
 =🐉= Task 9*: Final Dungeon Boss
