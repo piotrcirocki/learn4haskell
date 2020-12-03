@@ -801,7 +801,35 @@ Specifically,
  ❃ Implement the function to convert Tree to list
 -}
 
+data Tree a = Leaf | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
+instance Functor Tree where
+  fmap :: (a -> b) -> Tree a -> Tree b
+  fmap f (Node e left right )  = Node (f e) (fmap f left) (fmap f right)
+  fmap _ Leaf = Leaf 
 
+reverseTree :: Tree a -> Tree a
+reverseTree t@Leaf = t
+reverseTree (Node e l r ) = Node e (reverseTree r) (reverseTree l)
+
+treeToList :: Tree a -> [a]
+treeToList Leaf = []         
+treeToList (Node e left right) = treeToList left ++ [e] ++ treeToList right
+
+functorListEx1 :: Tree Integer
+functorListEx1 = 
+  let tree = Node 1 (Node 9 (Node 1 Leaf Leaf) (Node 3 Leaf Leaf)) (Node 7 (Node 6 Leaf Leaf) (Node 7 Leaf Leaf))
+  in fmap ( +6 ) tree
+
+reverseTreeEx1 :: Tree Integer
+reverseTreeEx1 = 
+  let tree = Node 1 (Node 3 Leaf Leaf) (Node 2 Leaf Leaf)
+  in reverseTree tree
+
+treeToListEx1 :: [Integer]
+treeToListEx1 = 
+  let tree = Node 1 (Node 3 Leaf Leaf) (Node 2 Leaf Leaf)
+  in treeToList tree
+  
 {-
 You did it! Now it is time to open pull request with your changes
 and summon @vrom911 and @chshersh for the review!
